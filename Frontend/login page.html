@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script type="module" src="firebase-config.js"></script>
+  <script type="module" src="google-login.js"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EduLearn - Sign In & Sign Up</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Pacifico&display=swap" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/remixicon@4.5.0/fonts/remixicon.css" rel="stylesheet">
+
+<style>
+.password-toggle { cursor: pointer; }
+.password-input { padding-right: 2.5rem; }
+.form-container { min-height: 100vh; }
+.error { display: none; color: #ef4444; font-size: 0.875rem; margin-top: 0.25rem; }
+</style>
+
+</head>
+<body class="bg-gray-50">
+<div class="flex min-h-screen justify-center items-center">
+<div class="w-full max-w-md mx-auto px-4">
+<div id="login-form" class="bg-white p-8 rounded-lg shadow-lg">
+<div class="text-center mb-8">
+<h1 class="font-['Pacifico'] text-3xl text-primary mb-2">EduHub</h1>
+<p class="text-gray-600">Welcome back to your learning journey</p>
+</div>
+<script type="module">
+  import { auth } from "./firebase-config.js";
+  console.log("Firebase Auth Initialized:", auth);
+</script>
+
+<!-- LOGIN FORM -->
+<form id="loginForm" class="space-y-4">
+<div>
+<label class="block text-sm font-medium text-gray-700 mb-1">Email Address</label>
+<input type="email" id="login-email" class="w-full h-11 bg-gray-50 border rounded-lg px-3" required>
+</div>
+
+<div>
+<label class="block text-sm font-medium text-gray-700 mb-1">Password</label>
+<input type="password" id="login-password" class="w-full h-11 bg-gray-50 border rounded-lg px-3" required>
+</div>
+
+<button type="submit" class="w-full h-11 bg-blue-500 text-white rounded-lg">Sign In</button>
+</form>
+
+<p class="mt-4 text-center text-sm">
+Don't have an account? <a href="#" class="text-blue-500" onclick="toggleForm()">Sign up</a>
+</p>
+
+<button id="google-login" class="w-full h-11 mt-4 bg-red-500 text-white rounded-lg">Sign In with Google</button>
+</div>
+
+<!-- SIGNUP FORM -->
+<div id="signup-form" class="hidden bg-white p-8 rounded-lg shadow-lg">
+<div class="text-center mb-8">
+<h1 class="font-['Pacifico'] text-3xl text-primary mb-2">EduHub</h1>
+<p class="text-gray-600">Join our learning community today</p>
+</div>
+
+<form id="signupForm" class="space-y-4">
+<div>
+<label class="block text-sm font-medium text-gray-700 mb-1">Full Name</label>
+<input type="text" id="signup-name" class="w-full h-11 bg-gray-50 border rounded-lg px-3" required>
+</div>
+
+<div>
+<label class="block text-sm font-medium text-gray-700 mb-1">Email Address</label>
+<input type="email" id="signup-email" class="w-full h-11 bg-gray-50 border rounded-lg px-3" required>
+</div>
+
+<div>
+<label class="block text-sm font-medium text-gray-700 mb-1">Password</label>
+<input type="password" id="signup-password" class="w-full h-11 bg-gray-50 border rounded-lg px-3" required>
+</div>
+
+<button type="submit" class="w-full h-11 bg-green-500 text-white rounded-lg">Create Account</button>
+</form>
+
+<p class="mt-4 text-center text-sm">
+Already have an account? <a href="#" class="text-blue-500" onclick="toggleForm()">Sign in</a>
+</p>
+</div>
+
+</div>
+</div>
+
+<!-- FIREBASE SETUP -->
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.10.0/firebase-app.js";
+  import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, GoogleAuthProvider, signInWithPopup } from "https://www.gstatic.com/firebasejs/10.10.0/firebase-auth.js";
+  import { getDatabase, ref, set } from "https://www.gstatic.com/firebasejs/10.10.0/firebase-database.js";
+
+  // Firebase Configuration
+  const firebaseConfig = {
+    apiKey: "AIzaSyBK5bvSFS5EF94TglB51T8MFZWoJlXICsQ",
+  authDomain: "edu-hub-f0ad8.firebaseapp.com",
+  projectId: "edu-hub-f0ad8",
+  storageBucket: "edu-hub-f0ad8.firebasestorage.app",
+  messagingSenderId: "506338961537",
+  appId: "1:506338961537:web:c2326cc24b466697538580"
+};
+  };
+
+  // Initialize Firebase
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const provider = new GoogleAuthProvider();
+  const database = getDatabase(app);
+
+  // Sign Up Function
+  document.getElementById("signupForm").addEventListener("submit", function (e) {
+    e.preventDefault();
+    
+    const name = document.getElementById("signup-name").value;
+    const email = document.getElementById("signup-email").value;
+    const password = document.getElementById("signup-password").value;
+
+    createUserWithEmailAndPassword(auth, email, password)
+      .then((userCredential) => {
+        const user = userCredential.user;
+        set(ref(database, "users/" + user.uid), { name, email });
+
+        alert("Account Created Successfully!");
+      })
+      .catch((error) => alert(error.message));
+  });
+
+  // Sign In Function
+  document.getElementById("loginForm").addEventListener("submit", function (e) {
+    e.preventDefault();
+
+    const email = document.getElementById("login-email").value;
+    const password = document.getElementById("login-password").value;
+
+    signInWithEmailAndPassword(auth, email, password)
+      .then(() => {
+        alert("Signed In Successfully!");
+        window.location.href = "dashboard.html";
+      })
+      .catch((error) => alert(error.message));
+  });
+
+  // Google Login
+  document.getElementById("google-login").addEventListener("click", function () {
+    signInWithPopup(auth, provider)
+      .then((result) => {
+        const user = result.user;
+        set(ref(database, "users/" + user.uid), { name: user.displayName, email: user.email });
+        
+        alert(`Welcome, ${user.displayName}!`);
+        window.location.href = "dashboard.html";
+      })
+      .catch((error) => alert(error.message));
+  });
+
+</script>
+
+<!-- FORM TOGGLER -->
+<script>
+  function toggleForm() {
+    document.getElementById("login-form").classList.toggle("hidden");
+    document.getElementById("signup-form").classList.toggle("hidden");
+  }
+</script>
+
+</body>
+</html>
